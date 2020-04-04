@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layoutDirection="rtl"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+
+        <EditText
+            android:id="@+id/editText2"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:inputType="none"
+            android:duplicateParentState="false"
+            android:ems="10"
+            android:enabled="false"
+            android:longClickable="false"
+            android:text="صفحه" />
+        <Spinner
+            android:id="@+id/spinner_pageNum"
+            android:layout_width="200dp"
+            android:layout_height="45dp" />
+
+        <EditText
+            android:id="@+id/editText_suraName"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:clickable="false"
+            android:duplicateParentState="false"
+            android:ems="10"
+            android:longClickable="false"
+            android:enabled="false"
+            android:text="سوره">
+
+            <requestFocus />
+        </EditText>
+
+        <EditText
+            android:id="@+id/editText1"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:duplicateParentState="false"
+            android:ems="10"
+            android:enabled="false"
+            android:longClickable="false"
+            android:text="تکرار" />
+        <Spinner
+            android:id="@+id/spinner_Tekrar"
+            android:layout_width="80dp"
+            android:layout_height="45dp" />
+
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <MultiAutoCompleteTextView
+            android:id="@+id/multiAutoCompleteTextView1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ems="10"
+            android:inputType="none" />
+
+    </LinearLayout>
+
+</LinearLayout>
