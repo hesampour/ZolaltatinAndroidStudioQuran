@@ -484,7 +484,7 @@ public class MainActivity extends SwipeActivity   {
 							switch (item.getItemId()) {
 								case R.id.play:
 									try {
-										quranlandscape.play(pageText1);
+										quranlandscape.play();
 										Log.d("quran", "playing");
 									} catch (Exception e) {
 									}
@@ -571,7 +571,7 @@ public class MainActivity extends SwipeActivity   {
 							switch (item.getItemId()) {
 								case R.id.play:
 									try {
-										quranlandscape.play(pageText2);
+										quranlandscape.play();
 										Log.d("quran", "playing");
 									} catch (Exception e) {
 									}

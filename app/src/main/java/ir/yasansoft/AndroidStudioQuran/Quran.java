@@ -229,9 +229,7 @@ public class Quran implements Serializable {
 		  int milE = Integer.parseInt(end[2]);
 
 		  int startA = (((((min*60)+sec)*1000)+mil)*12);
-		  Log.d("start", "" +startA);
 		  int endA =  (((((minE*60)+secE)*1000)+milE)*12);
-		  Log.d("end", "" +endA);
 //		  mediaplayer =  new MediaPlayer();
 //
 //			  if (mediaplayer.isPlaying()) {
@@ -284,8 +282,9 @@ public class Quran implements Serializable {
 	      	Cursor cur = mDbHelper.getData(command); 
 	      	mDbHelper.close();
 	      	CurrentPlayinID = Integer.parseInt( cur.getString(cur.getColumnIndex("_id")));
-	      		playID(CurrentPlayinID,pageText);
-	      		setTimer(pageText);
+	      	mediaplayer.reset();
+	      	playID(CurrentPlayinID,pageText);
+	      	setTimer(pageText);
 		  }
 	  }
 	  

@@ -1,6 +1,8 @@
 package ir.yasansoft.AndroidStudioQuran;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -10,6 +12,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.media.MediaPlayer;
 import android.os.Environment;
 import android.os.Handler;
 import android.text.Spannable;
@@ -43,6 +46,8 @@ public class QuranLandscape {
     Context context;
     public int FontSize = 17;
     Sound sound = new Sound();
+    MediaPlayer mediaplayer = new MediaPlayer();
+
     public QuranLandscape(Context context, MultiAutoCompleteTextView pageText1, MultiAutoCompleteTextView pageText2)
     {
         this.context = context;
@@ -158,11 +163,11 @@ public class QuranLandscape {
             oddPagenumber = pageNum;
             evenPagenumber = pageNum+1;
         }
-        this.CurrentPage = oddPagenumber;
         Log.d("CurrentPage" ,Integer.toString(CurrentPage));
 
         pageInformation info = this.Loadpage(oddPagenumber,pageText1);
         this.Loadpage(evenPagenumber,pageText2);
+        this.CurrentPage = oddPagenumber;
         return info;
     }
 
@@ -188,9 +193,10 @@ public class QuranLandscape {
     }
 
 
-    private void playID(int id,String path)
+    private void playID(int id)
     {
-        isPlaying = true;
+        try {
+            isPlaying = true;
         this.CurrentPlayinID = id;
         HefzDatabase.Adapter mDbHelper = new HefzDatabase.Adapter(context, "Hefz");
         mDbHelper.createDatabase();
@@ -199,11 +205,11 @@ public class QuranLandscape {
         Cursor cur = mDbHelper.getData(command);
         mDbHelper.close();
         int pageNum =Integer.parseInt( cur.getString(cur.getColumnIndex("pageNum")));
-        if(pageNum != CurrentPage && pageNum%2!=0 )
+        if(pageNum != this.CurrentPage && pageNum%2!=0 )
         {
             this.CurrentPage = pageNum;
             LoadpageLandscape(pageNum);
-        } else if(pageNum%2 == 0){
+        } else if(pageNum != this.CurrentPage && pageNum%2 == 0){
             this.CurrentPage = pageNum;
         }
         int start_Text =Integer.parseInt( cur.getString(cur.getColumnIndex("Start_Text")));
@@ -215,49 +221,49 @@ public class QuranLandscape {
             Spannable s = (Spannable) pageText1.getText();
             s.setSpan(new ForegroundColorSpan(0xFFFF0000), start_Text, End_Text, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
-        sound.playID(id, context,path);
+            String Start_audio = Utility.GetColumnValue(cur, "Start_audio");
+            String End_audio = Utility.GetColumnValue(cur, "End_audio");
+            String juz = cur.getString(cur.getColumnIndex("juz"));
+            String[] start = Start_audio.split(":");
+            int min = Integer.parseInt(start[0]);
+            int sec = Integer.parseInt(start[1]);
+            int mil = Integer.parseInt(start[2]);
 
+            String[] end = End_audio.split(":");
+            int minE = Integer.parseInt(end[0]);
+            int secE = Integer.parseInt(end[1]);
+            int milE = Integer.parseInt(end[2]);
+
+            int startA = (((((min*60)+sec)*1000)+mil)*12);
+            int endA =  (((((minE*60)+secE)*1000)+milE)*12);
+            File sdcard = Environment.getExternalStorageDirectory();
+            String path = "Zolaltarin/Sounds/Parhizkar/" + juz + ".mp3";
+            File file = new File(sdcard,path);
+            if(file.exists())
+            {
+                FileDescriptor descriptor =  new FileInputStream(file).getFD();
+                mediaplayer.setDataSource(descriptor, startA, endA - startA);
+                mediaplayer.prepare();
+                mediaplayer.start();
+            }
+            else
+            {
+                Toast.makeText(context, "فایل صوتی پیدا نشد 2", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 
-    public void playNext(MultiAutoCompleteTextView pageText)
-    {
-        if(this.currentTekrar < tekrar)
-        {
-            this.currentTekrar +=1;
-        }
-        else
-        {
-            this.currentTekrar = 1;
-            this.CurrentPlayinID+=1;
-        }
-        HefzDatabase.Adapter mDbHelper = new HefzDatabase.Adapter(context,"Hefz");
-        mDbHelper.createDatabase();
-        mDbHelper.open();
-        String command = "SELECT _id, juz, pageNum, Sura, VerseID, Start_audio, End_audio, Start_Text, End_Text from " + ghari + " where _id= " + CurrentPlayinID ;
-        Cursor cur = mDbHelper.getData(command);
-        mDbHelper.close();
-        String juz = cur.getString(cur.getColumnIndex("juz"));
-        File sdcard = Environment.getExternalStorageDirectory();
-        String path = "Zolaltarin/Sounds/Parhizkar/" + juz + ".mp3";
-        File file = new File(sdcard,path);
-        if(file.exists())
-        {
-            playID(this.CurrentPlayinID,path);
-        }
-        else
-        {
-            Toast.makeText(context, "فایل صوتی پیدا نشد", Toast.LENGTH_LONG).show();
-        }
-    }
 
-    public void play(MultiAutoCompleteTextView pageText)
+    public void play()
     {
         if(isPaused)
         {
             isPlaying = true;
             isPaused = false;
             sound.restart();
-            setTimer(pageText);
+            setTimer();
         }
 
         else
@@ -280,8 +286,8 @@ public class QuranLandscape {
             File file = new File(sdcard,path);
             if(file.exists())
             {
-                playID(CurrentPlayinID,path);
-                setTimer(pageText);
+                playID(CurrentPlayinID);
+                setTimer();
             }
             else
             {
@@ -291,7 +297,7 @@ public class QuranLandscape {
         }
     }
 
-    public void setTimer(final MultiAutoCompleteTextView pageText)
+    public void setTimer()
     {
         TimerHandler = new Handler();
         TimerHandler.postDelayed(new Runnable()
@@ -299,14 +305,30 @@ public class QuranLandscape {
             @Override
             public void run()
             {
-                if(!sound.isPlaying())
+                if(!mediaplayer.isPlaying())
                 {
-                    resetCurrentColor();
-                    playNext(pageText);
+                        mediaplayer.reset();
+                        Spannable s = (Spannable) pageText1.getText();
+                        s.setSpan(new ForegroundColorSpan(Color.BLACK), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        Spannable s2 = (Spannable) pageText2.getText();
+                        s2.setSpan(new ForegroundColorSpan(Color.BLACK), 0, s2.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        //s.setSpan(new ForegroundColorSpan(Color.BLACK), prev_Start_Text, prev_End_text, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    //resetCurrentColor(pageText);
+                    if(currentTekrar < tekrar)
+                    {
+                        currentTekrar +=1;
+                    }
+                    else
+                    {
+                        currentTekrar = 1;
+                        CurrentPlayinID+=1;
+                    }
+                    playID(CurrentPlayinID);
                 }
-                TimerHandler.postDelayed(this, 2000);
+
+                TimerHandler.postDelayed(this, 1000);
             }
-        }, 2000);
+        }, 1000);
     }
 
     public void stopTimer()
@@ -317,10 +339,10 @@ public class QuranLandscape {
 
     public void stop()
     {
-        if(sound.isPlaying())
+        if(mediaplayer.isPlaying())
         {
             stopTimer();
-            sound.stop();
+            mediaplayer.stop();
             isStopped = true;
             isPlaying = false;
         }
@@ -328,11 +350,11 @@ public class QuranLandscape {
 
     public void pause()
     {
-        if(sound.isPlaying())
+        if(mediaplayer.isPlaying())
         {
             isPaused = true;
             stopTimer();
-            sound.pause();
+            mediaplayer.pause();
             isPlaying = false;
         }
     }
